@@ -1,102 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nomor Antrian</title>
+    <title>Display Antrian</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Auto reload full page tiap 5 menit (backup jika koneksi error) -->
-    <meta http-equiv="refresh" content="300">
+    <!-- Backup auto reload -->
+    <meta http-equiv="refresh" content="600">
 
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            color: white;
             text-align: center;
         }
-        .card {
-            background: rgba(255,255,255,0.1);
-            padding: 50px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+
+        .container {
             width: 90%;
-            max-width: 600px;
         }
+
         h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 40px;
+            margin-bottom: 20px;
         }
-        #nomor {
-            font-size: 120px;
+
+        .current {
+            font-size: 150px;
             font-weight: bold;
             margin: 20px 0;
-            transition: 0.3s ease;
+            transition: 0.3s;
         }
-        .update-info {
-            font-size: 14px;
+
+        .next {
+            font-size: 40px;
             opacity: 0.7;
         }
-        .blink {
-            animation: blink 0.6s ease;
+
+        .info {
+            margin-top: 20px;
+            font-size: 16px;
+            opacity: 0.6;
         }
-        @keyframes blink {
+
+        .blink {
+            animation: pop 0.6s ease;
+        }
+
+        @keyframes pop {
             0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.2); }
             100% { transform: scale(1); }
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: white;
+            color: black;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>NOMOR ANTRIAN SAAT INI</h1>
-    <div id="nomor">-</div>
-    <div class="update-info">
-        Update otomatis setiap 3 detik
-        <br>
+<div class="container">
+    <h1>NOMOR ANTRIAN</h1>
+
+    <div class="current" id="currentNumber">-</div>
+
+    <div class="next">
+        Selanjutnya: <span id="nextNumber">-</span>
+    </div>
+
+    <div class="info">
+        Update otomatis setiap 3 detik <br>
         Terakhir update: <span id="lastUpdate">-</span>
     </div>
 </div>
 
+<button class="fullscreen-btn" onclick="goFullscreen()">Fullscreen</button>
+
 <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbypb4qhwig6XkXp5bxgJ3rc0K3MQZC8jJjNnO0_aWucZrPgnBy8oak3BCWTPC6wxi-4pg/exec";
-    let nomorSebelumnya = null;
+    let lastNumber = null;
+
+    function speakNumber(number) {
+        const msg = new SpeechSynthesisUtterance(
+            "Nomor antrian " + number + ", silakan menuju loket."
+        );
+        msg.lang = "id-ID";
+        msg.rate = 0.9;
+        speechSynthesis.speak(msg);
+    }
 
     function loadData() {
         fetch(scriptURL)
             .then(res => res.json())
             .then(data => {
-                const nomorBaru = data.nomor;
-                const nomorElement = document.getElementById("nomor");
 
-                if (nomorBaru !== nomorSebelumnya) {
-                    nomorElement.innerText = nomorBaru;
-                    nomorElement.classList.add("blink");
+                const current = parseInt(data.nomor);
+                const next = current + 1;
+
+                if (current !== lastNumber) {
+
+                    document.getElementById("currentNumber").innerText = current;
+                    document.getElementById("nextNumber").innerText = next;
+
+                    document.getElementById("currentNumber").classList.add("blink");
 
                     setTimeout(() => {
-                        nomorElement.classList.remove("blink");
+                        document.getElementById("currentNumber").classList.remove("blink");
                     }, 600);
 
-                    nomorSebelumnya = nomorBaru;
+                    speakNumber(current); // 🔊 SUARA OTOMATIS
+
+                    lastNumber = current;
                 }
 
                 document.getElementById("lastUpdate").innerText =
                     new Date().toLocaleTimeString();
+
             })
-            .catch(() => {
-                console.log("Gagal mengambil data...");
-            });
+            .catch(() => console.log("Gagal ambil data"));
     }
 
-    // Load pertama kali
-    loadData();
+    function goFullscreen() {
+        document.documentElement.requestFullscreen();
+    }
 
-    // AUTO UPDATE tiap 3 detik
+    loadData();
     setInterval(loadData, 3000);
 </script>
 
