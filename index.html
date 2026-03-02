@@ -102,35 +102,45 @@
         speechSynthesis.speak(msg);
     }
 
-    function loadData() {
-        fetch(scriptURL)
-            .then(res => res.json())
-            .then(data => {
+    async function loadData() {
+        try {
+            const response = await fetch(scriptURL);
+            const text = await response.text();
 
-                const current = parseInt(data.nomor);
-                const next = current + 1;
+            console.log("Raw response:", text); // DEBUG
 
-                if (current !== lastNumber) {
+            const data = JSON.parse(text);
 
-                    document.getElementById("currentNumber").innerText = current;
-                    document.getElementById("nextNumber").innerText = next;
+            if (!data.nomor) {
+                console.error("Format JSON salah:", data);
+                return;
+            }
 
-                    document.getElementById("currentNumber").classList.add("blink");
+            const current = parseInt(data.nomor);
+            const next = current + 1;
 
-                    setTimeout(() => {
-                        document.getElementById("currentNumber").classList.remove("blink");
-                    }, 600);
+            if (current !== lastNumber) {
 
-                    speakNumber(current); // 🔊 SUARA OTOMATIS
+                document.getElementById("currentNumber").innerText = current;
+                document.getElementById("nextNumber").innerText = next;
 
-                    lastNumber = current;
-                }
+                document.getElementById("currentNumber").classList.add("blink");
 
-                document.getElementById("lastUpdate").innerText =
-                    new Date().toLocaleTimeString();
+                setTimeout(() => {
+                    document.getElementById("currentNumber").classList.remove("blink");
+                }, 600);
 
-            })
-            .catch(() => console.log("Gagal ambil data"));
+                speakNumber(current);
+
+                lastNumber = current;
+            }
+
+            document.getElementById("lastUpdate").innerText =
+                new Date().toLocaleTimeString();
+
+        } catch (error) {
+            console.error("ERROR FETCH:", error);
+        }
     }
 
     function goFullscreen() {
