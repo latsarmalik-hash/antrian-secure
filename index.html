@@ -3,6 +3,10 @@
 <head>
     <title>Nomor Antrian</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Auto reload full page tiap 5 menit (backup jika koneksi error) -->
+    <meta http-equiv="refresh" content="300">
+
     <style>
         body {
             margin: 0;
@@ -17,17 +21,33 @@
         }
         .card {
             background: rgba(255,255,255,0.1);
-            padding: 40px;
+            padding: 50px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 600px;
         }
         h1 {
-            font-size: 30px;
+            font-size: 28px;
+            margin-bottom: 10px;
         }
         #nomor {
-            font-size: 100px;
+            font-size: 120px;
             font-weight: bold;
-            margin-top: 20px;
+            margin: 20px 0;
+            transition: 0.3s ease;
+        }
+        .update-info {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .blink {
+            animation: blink 0.6s ease;
+        }
+        @keyframes blink {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -36,20 +56,47 @@
 <div class="card">
     <h1>NOMOR ANTRIAN SAAT INI</h1>
     <div id="nomor">-</div>
+    <div class="update-info">
+        Update otomatis setiap 3 detik
+        <br>
+        Terakhir update: <span id="lastUpdate">-</span>
+    </div>
 </div>
 
 <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbypb4qhwig6XkXp5bxgJ3rc0K3MQZC8jJjNnO0_aWucZrPgnBy8oak3BCWTPC6wxi-4pg/exec";
+    let nomorSebelumnya = null;
 
     function loadData() {
         fetch(scriptURL)
             .then(res => res.json())
             .then(data => {
-                document.getElementById("nomor").innerText = data.nomor;
+                const nomorBaru = data.nomor;
+                const nomorElement = document.getElementById("nomor");
+
+                if (nomorBaru !== nomorSebelumnya) {
+                    nomorElement.innerText = nomorBaru;
+                    nomorElement.classList.add("blink");
+
+                    setTimeout(() => {
+                        nomorElement.classList.remove("blink");
+                    }, 600);
+
+                    nomorSebelumnya = nomorBaru;
+                }
+
+                document.getElementById("lastUpdate").innerText =
+                    new Date().toLocaleTimeString();
+            })
+            .catch(() => {
+                console.log("Gagal mengambil data...");
             });
     }
 
+    // Load pertama kali
     loadData();
+
+    // AUTO UPDATE tiap 3 detik
     setInterval(loadData, 3000);
 </script>
 
