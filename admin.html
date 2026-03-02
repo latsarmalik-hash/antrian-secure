@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Antrian</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: white;
+            text-align: center;
+            padding-top: 100px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        #panel { display: none; }
+    </style>
+</head>
+<body>
+
+<h2>Login Admin</h2>
+<input type="password" id="password" placeholder="Masukkan Password">
+<button onclick="login()">Login</button>
+
+<div id="panel">
+    <h2>Ubah Nomor Antrian</h2>
+    <input type="number" id="nomorBaru" placeholder="Nomor Baru">
+    <button onclick="updateNomor()">Update</button>
+</div>
+
+<script>
+    const ADMIN_PASSWORD = "12345"; // GANTI password di sini
+    const scriptURL = "YOUR_APPS_SCRIPT_URL";
+
+    function login() {
+        const pass = document.getElementById("password").value;
+        if(pass === ADMIN_PASSWORD) {
+            document.getElementById("panel").style.display = "block";
+            alert("Login berhasil");
+        } else {
+            alert("Password salah");
+        }
+    }
+
+    function updateNomor() {
+        const nomor = document.getElementById("nomorBaru").value;
+
+        fetch(scriptURL, {
+            method: "POST",
+            body: JSON.stringify({ nomor: nomor })
+        })
+        .then(res => res.text())
+        .then(() => {
+            alert("Nomor berhasil diupdate");
+        });
+    }
+</script>
+
+</body>
+</html>
